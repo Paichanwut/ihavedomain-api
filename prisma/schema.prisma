@@ -1,0 +1,57 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+
+model cat_table {
+  id        Int     @id(map: "cat_table_pk")
+  title_cat String? @db.VarChar
+}
+
+model ihavedomain_db {
+  id                       Int       @id @default(autoincrement())
+  domain_name              String
+  domain_matches           Json?     @default("0")
+  googleindex_step1_2data  Json      @default("0")
+  seocheckerss             Json      @default("0")
+  ahrefs_alltraffic        Json      @default("0")
+  ahrefs_anchor            Json      @default("0")
+  ahrefs_backlinksnonewiki Json      @default("0")
+  ahrefs_backlinkswiki     Json      @default("0")
+  ai_domain                String    @default("0")
+  wayback                  Json      @default("0")
+  ratingdomain             String    @default("1")
+  date_createdat           DateTime? @default(now()) @db.Timestamp(6)
+  updatetime               DateTime? @default(now()) @db.Timestamp(6)
+  status                   Int?      @default(1) @db.SmallInt
+}
+
+model ihavedomain_dbv2 {
+  id                        Int       @id @default(autoincrement())
+  ai_domain                 String?
+  domain_name               String?
+  ahrefs_anchor             Json?
+  ahrefs_backlinksnonewiki  Json?
+  ahrefs_backlinkswikicount Int?
+  ahrefs_alltraffic         Json?
+  googleindex_step1_2data   Json?
+  godady_matches            Json?
+  seocheckerss              Json?
+  total_price               Int?
+  wayback                   Json?
+  status                    Int?      @default(1) @db.SmallInt
+  date_createdat            DateTime? @default(now()) @db.Timestamp(6)
+  ahrefs_backlinkswiki      Json?
+  namecheap_domain          Json?
+}
+
+model migrations {
+  id          Int       @id
+  name        String    @unique @db.VarChar(100)
+  hash        String    @db.VarChar(40)
+  executed_at DateTime? @default(now()) @db.Timestamp(6)
+}

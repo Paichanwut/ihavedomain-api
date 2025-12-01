@@ -1,0 +1,72 @@
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
+export async function GET() {
+    try {
+        const domain = await prisma.ihavedomain_db.findMany({
+            where: {
+                domain_matches: {
+                    path: ['end_time'],
+                    gte: new Date().toISOString(),
+                }
+            }
+        })
+
+        const count = domain.length;
+        console.log(`Total active domains: ${count}`);
+        return Response.json({ code: 200, data: domain }, { status: 200 });
+    } catch (error) {
+        return NextResponse.json({ code: 500, error: "Internal Server Error" }, { status: 500 });
+    }
+}
+
+export async function POST(request: Request) { 
+    try {
+        // รับค่าจาก body ของ request
+        const body = await request.json();
+        const { limit, start_limit, isus } = body;
+
+        // กำหนดค่าเริ่มต้น
+        const defaultLimit = 10;
+        const takeValue = isus === 'aished' || isus === 'antoine' ? undefined : limit || defaultLimit; // ถ้าเป็น 'aished'/'antoine' ให้เอาทั้งหมด (undefined), ไม่งั้นใช้ limit หรือ 10
+        const skipValue = isus === 'aished' || isus === 'antoine' ? undefined : start_limit || 0; // ถ้าเป็น 'aished'/'antoine' ให้เอาทั้งหมด (undefined), ไม่งั้นใช้ start_limit หรือ 0
+        
+        // เงื่อนไขในการดึงข้อมูล
+        const whereCondition: any = {
+            // เงื่อนไขเดิม: end_time >= วันที่ปัจจุบัน
+            domain_matches: {
+                path: ['end_time'],
+                gte: new Date().toISOString(),
+            }
+        };
+
+        // ถ้า isus เป็น 'aished' หรือ 'antoine'
+        if (isus === 'aished' || isus === 'antoine') {
+            // ดึงทั้งหมด โดยไม่มี limit/skip และไม่ต้องเพิ่มเงื่อนไข where เพิ่มเติม (แต่เงื่อนไข end_time ยังอยู่)
+            // คุณอาจต้องการเพิ่มเงื่อนไขที่เกี่ยวกับ userLevel ถ้ามี field ใน db
+            // เช่น: whereCondition.user_level = isus;
+        } 
+        
+        // ถ้า isus เป็น null หรือค่าอื่น ๆ ที่ไม่ใช่ 'aished'/'antoine'
+        // จะมีการใช้ take/skip เพื่อจำกัด 10 ตัวแรก หรือตามค่า limit/start_limit ที่ส่งมา
+
+        // ดึงข้อมูลจากฐานข้อมูล
+        const domain = await prisma.ihavedomain_db.findMany({
+            where: whereCondition,
+            // ใช้ take เพื่อจำกัดจำนวนผลลัพธ์
+            take: takeValue, 
+            // ใช้ skip เพื่อข้ามจำนวนแถว (สำหรับ pagination)
+            skip: skipValue, 
+        });
+
+        const count = domain.length;
+        console.log(`Total active domains retrieved: ${count}`);
+        
+        // ส่งผลลัพธ์กลับ
+        return NextResponse.json({ code: 200, data: domain, total_retrieved: count }, { status: 200 });
+
+    } catch (error) {
+        console.error("Database or Server Error:", error);
+        // ใช้ NextResponse.json เพื่อความสม่ำเสมอในการตอบกลับ
+        return NextResponse.json({ code: 500, error: "Internal Server Error" }, { status: 500 });
+    }
+}
