@@ -1,37 +1,19 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-export async function GET() {
-    try {
-        const domain = await prisma.ihavedomain_db.findMany({
-            where: {
-                domain_matches: {
-                    path: ['end_time'],
-                    gte: new Date().toISOString(),
-                }
-            }
-        })
-
-        const count = domain.length;
-        console.log(`Total active domains: ${count}`);
-        return Response.json({ code: 200, data: domain }, { status: 200 });
-    } catch (error) {
-        return NextResponse.json({ code: 500, error: "Internal Server Error" }, { status: 500 });
-    }
-}
+import { Prisma } from '@prisma/client';
 
 export async function POST(request: Request) { 
     try {
         // รับค่าจาก body ของ request
         const body = await request.json();
-        const { limit, start_limit, isus } = body;
+        const { limit = 10, start_limit, isus } = body;
 
         // กำหนดค่าเริ่มต้น
-        const defaultLimit = 10;
-        const takeValue = isus === 'aished' || isus === 'antoine' ? undefined : limit || defaultLimit; // ถ้าเป็น 'aished'/'antoine' ให้เอาทั้งหมด (undefined), ไม่งั้นใช้ limit หรือ 10
+        const takeValue = isus === 'aished' || isus === 'antoine' ? undefined : limit || limit; // ถ้าเป็น 'aished'/'antoine' ให้เอาทั้งหมด (undefined), ไม่งั้นใช้ limit หรือ 10
         const skipValue = isus === 'aished' || isus === 'antoine' ? undefined : start_limit || 0; // ถ้าเป็น 'aished'/'antoine' ให้เอาทั้งหมด (undefined), ไม่งั้นใช้ start_limit หรือ 0
         
         // เงื่อนไขในการดึงข้อมูล
-        const whereCondition: any = {
+        const where: Prisma.ihavedomain_dbWhereInput = {
             // เงื่อนไขเดิม: end_time >= วันที่ปัจจุบัน
             domain_matches: {
                 path: ['end_time'],
@@ -51,7 +33,7 @@ export async function POST(request: Request) {
 
         // ดึงข้อมูลจากฐานข้อมูล
         const domain = await prisma.ihavedomain_db.findMany({
-            where: whereCondition,
+            where,
             // ใช้ take เพื่อจำกัดจำนวนผลลัพธ์
             take: takeValue, 
             // ใช้ skip เพื่อข้ามจำนวนแถว (สำหรับ pagination)
