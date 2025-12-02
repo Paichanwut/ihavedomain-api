@@ -9,8 +9,10 @@ export async function POST(request: Request) {
         const { limit = 10, start_limit, isus } = body;
 
         // กำหนดค่าเริ่มต้น
-        const takeValue = isus === 'aished' || isus === 'antoine' ? undefined : limit || limit; // ถ้าเป็น 'aished'/'antoine' ให้เอาทั้งหมด (undefined), ไม่งั้นใช้ limit หรือ 10
+        const takeValue = isus === 'aished' || isus === 'antoine' ? undefined : !isus ? 10 : limit;
+
         const skipValue = isus === 'aished' || isus === 'antoine' ? undefined : start_limit || 0; // ถ้าเป็น 'aished'/'antoine' ให้เอาทั้งหมด (undefined), ไม่งั้นใช้ start_limit หรือ 0
+        
         
         // เงื่อนไขในการดึงข้อมูล
         const where: Prisma.ihavedomain_dbWhereInput = {
@@ -32,16 +34,13 @@ export async function POST(request: Request) {
         // จะมีการใช้ take/skip เพื่อจำกัด 10 ตัวแรก หรือตามค่า limit/start_limit ที่ส่งมา
 
         // ดึงข้อมูลจากฐานข้อมูล
-        const domain = await prisma.ihavedomain_db.findMany({
+        const domain = await prisma.ihavedomain_db?.findMany({
             where,
-            // ใช้ take เพื่อจำกัดจำนวนผลลัพธ์
             take: takeValue, 
-            // ใช้ skip เพื่อข้ามจำนวนแถว (สำหรับ pagination)
             skip: skipValue, 
         });
 
         const count = domain.length;
-        console.log(`Total active domains retrieved: ${count}`);
         
         // ส่งผลลัพธ์กลับ
         return NextResponse.json({ code: 200, data: domain, total_retrieved: count }, { status: 200 });
