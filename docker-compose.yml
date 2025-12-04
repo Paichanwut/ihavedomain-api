@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  next-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: next_app
+    ports:
+      - "3003:24565" # map port 3000 ของ container -> 3000 ของ host
+    environment:
+      NODE_ENV: production
+    volumes:
+      - .:/app  # สำหรับ dev ให้แก้ไขไฟล์แล้ว live reload (ถ้าใช้ dev mode)
+    restart: unless-stopped
