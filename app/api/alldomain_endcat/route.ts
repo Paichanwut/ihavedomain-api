@@ -88,9 +88,7 @@ export async function POST(request: Request) {
 
         // 7. ส่งข้อมูลกลับ
         return NextResponse.json({
-            success: true,
             data: result,
-            count: result.length,
         });
 
     } catch (error: any) {

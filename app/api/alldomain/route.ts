@@ -27,7 +27,7 @@ export async function POST(request: Request) {
         queryParams.push(currentISODate); // $1
         const condition1 = `
       (
-        (id.domain_matches->>'end_time')::timestamp WITH TIME ZONE >= $1
+        (id.domain_matches->>'end_time')::timestamp WITH TIME ZONE >= $1::timestamptz
         AND 
         (
           (id.domain_matches->>'buy_it_now_amount_display' IS NULL OR id.domain_matches->>'buy_it_now_amount_display' = '')
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
           (id.domain_matches->>'buy_it_now_amount_display_usd' IS NOT NULL AND id.domain_matches->>'buy_it_now_amount_display_usd' != '')
         )
         AND
-        (id.domain_matches->>'end_time')::timestamp WITH TIME ZONE >= $2
+        (id.domain_matches->>'end_time')::timestamp WITH TIME ZONE >= $2::timestamptz
       )
     `;
 
