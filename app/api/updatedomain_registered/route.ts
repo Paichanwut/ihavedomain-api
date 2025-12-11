@@ -4,36 +4,57 @@ import { prisma } from "@/lib/db";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { domains } = body;
+    const { sold_domains, active_domains } = body;
 
-    // Input validation
-    if (!domains || !Array.isArray(domains) || domains.length === 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid input: domains array is required",
-          updated_count: 0,
+    let soldCount = 0;
+    let activeCount = 0;
+
+    // 1. Process Sold Domains: Set status = 9
+    if (
+      sold_domains &&
+      Array.isArray(sold_domains) &&
+      sold_domains.length > 0
+    ) {
+      const soldResult = await prisma.ihavedomain_db.updateMany({
+        where: {
+          domain_name: {
+            in: sold_domains,
+          },
         },
-        { status: 400 }
-      );
+        data: {
+          status: 9,
+        },
+      });
+      soldCount = soldResult.count;
     }
 
-    // Direct update: Set status = 9 for all domains in the list
-    const result = await prisma.ihavedomain_db.updateMany({
-      where: {
-        domain_name: {
-          in: domains,
+    // 2. Process Active Domains: Set updatetime = NOW()
+    if (
+      active_domains &&
+      Array.isArray(active_domains) &&
+      active_domains.length > 0
+    ) {
+      // Note: We use updateMany even if we are not changing a unique value, to update the timestamp.
+      // However, Prisma updateMany needs a `data` object.
+      // If we just want to touch the `updatetime`, we can do:
+      const activeResult = await prisma.ihavedomain_db.updateMany({
+        where: {
+          domain_name: {
+            in: active_domains,
+          },
         },
-      },
-      data: {
-        status: 9,
-      },
-    });
+        data: {
+          updatetime: new Date(),
+        },
+      });
+      activeCount = activeResult.count;
+    }
 
     return NextResponse.json({
       success: true,
-      updated_count: result.count,
-      message: `Marks ${result.count} domains as sold (status 9).`,
+      sold_count: soldCount,
+      active_count: activeCount,
+      message: `Processed updates: ${soldCount} marked sold, ${activeCount} timestamps updated.`,
     });
   } catch (error: any) {
     console.error("Database Error:", error);
