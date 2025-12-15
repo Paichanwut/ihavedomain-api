@@ -31,6 +31,8 @@ COPY . .
 RUN npx prisma generate
 RUN npm run build
 
+FROM nginx:alpine
+
 # ----------------------
 # Stage 3: Production image
 # ----------------------
@@ -45,8 +47,11 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./package.json
 
+# optional: ใช้ nginx.conf custom
+COPY ./default.conf /etc/nginx/conf.d/default.conf
+
 # Expose port
 EXPOSE 3000
 
 # Start Next.js
-CMD ["npm", "start"]
+CMD ["nginx", "-g", "daemon off;", "npm", "start"]

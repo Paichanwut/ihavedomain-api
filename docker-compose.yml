@@ -7,9 +7,11 @@ services:
       dockerfile: Dockerfile
     container_name: next_app
     ports:
-      - "25251:3000" # map port 3000 ของ container -> 25251 ของ host
+      - "3000:3000" # map port 3000 ของ container -> 3000 ของ host
     environment:
       NODE_ENV: production
+    env_file:
+      - .env
     # volumes:
     #   - .:/app  # Disable volume for production to use built assets
     restart: unless-stopped
