@@ -28,6 +28,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Build Next.js
+RUN npx prisma generate
 RUN npm run build
 
 # ----------------------
