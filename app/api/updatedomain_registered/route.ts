@@ -9,7 +9,6 @@ export async function POST(request: Request) {
     let soldCount = 0;
     let activeCount = 0;
 
-    // 1. Process Sold Domains: Set status = 9
     if (
       sold_domains &&
       Array.isArray(sold_domains) &&
